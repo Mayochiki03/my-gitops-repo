@@ -19,13 +19,13 @@ pipeline {
         stage('Install ArgoCD CLI') {
             steps {
                 sh '''
-                  if ! command -v argocd >/dev/null 2>&1; then
-                    echo "Installing argocd CLI..."
+                  if [ ! -f ./argocd ]; then
+                    echo "Installing argocd CLI locally..."
                     curl -sSL -o argocd https://github.com/argoproj/argo-cd/releases/latest/download/argocd-linux-amd64
                     chmod +x argocd
-                    mv argocd /usr/local/bin/argocd
                   fi
-                  argocd version
+
+                  ./argocd version
                 '''
             }
         }
@@ -34,7 +34,7 @@ pipeline {
             steps {
                 withCredentials([string(credentialsId: 'argo_new', variable: 'ARGOCD_TOKEN')]) {
                     sh '''
-                      argocd app sync hello-helm \
+                      ./argocd app sync hello-helm \
                         --server $ARGOCD_SERVER \
                         --auth-token $ARGOCD_TOKEN \
                         --insecure
