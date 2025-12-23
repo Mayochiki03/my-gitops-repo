@@ -3,6 +3,7 @@ pipeline {
 
     environment {
         ARGOCD_SERVER = "argocd-server.argocd.svc.cluster.local"
+        ARGOCD_OPTS   = "--insecure --grpc-web"
     }
 
     stages {
@@ -24,7 +25,6 @@ pipeline {
                     curl -sSL -o argocd https://github.com/argoproj/argo-cd/releases/latest/download/argocd-linux-amd64
                     chmod +x argocd
                   fi
-
                   ./argocd version
                 '''
             }
@@ -36,8 +36,7 @@ pipeline {
                     sh '''
                       ./argocd app sync hello-helm \
                         --server $ARGOCD_SERVER \
-                        --auth-token $ARGOCD_TOKEN \
-                        --insecure
+                        --auth-token $ARGOCD_TOKEN
                     '''
                 }
             }
