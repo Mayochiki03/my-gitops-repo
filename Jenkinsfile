@@ -2,7 +2,7 @@ pipeline {
     agent any
 
     environment {
-        ARGOCD_SERVER = "localhost:8081"
+        ARGOCD_SERVER = "argocd-server.argocd.svc.cluster.local"
     }
 
     stages {
