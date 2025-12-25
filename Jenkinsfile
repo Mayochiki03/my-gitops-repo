@@ -14,7 +14,7 @@ pipeline {
     stages {
 
         /* =========================
-           1. Checkout Source Code
+           1. Checkout
            ========================= */
         stage('Checkout') {
             steps {
@@ -24,25 +24,26 @@ pipeline {
         }
 
         /* =========================
-           2. Install Sonar Scanner
+           2. Install SonarScanner
            ========================= */
-    stage('Install SonarScanner') {
-        steps {
-            sh '''
-              if [ ! -d sonar-scanner ]; then
-                echo "Installing SonarScanner (tar.gz)..."
-                curl -sSL \
-                  https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-5.0.1.3006-linux.tar.gz \
-                  | tar xz
-                mv sonar-scanner-* sonar-scanner
-              fi
-    
-              export PATH=$PWD/sonar-scanner/bin:$PATH
-              sonar-scanner --version
-            '''
-        }
-    }
+        stage('Install SonarScanner') {
+            steps {
+                sh '''
+                  set -e
 
+                  if [ ! -d sonar-scanner ]; then
+                    echo "Installing SonarScanner..."
+                    curl -fsSL \
+                      https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-5.0.1.3006-linux.tar.gz \
+                      | tar -xz
+                    mv sonar-scanner-* sonar-scanner
+                  fi
+
+                  export PATH=$PWD/sonar-scanner/bin:$PATH
+                  sonar-scanner --version
+                '''
+            }
+        }
 
         /* =========================
            3. SonarQube Analysis
@@ -51,6 +52,7 @@ pipeline {
             steps {
                 withSonarQubeEnv('sonarqube') {
                     sh '''
+                      set -e
                       export PATH=$PWD/sonar-scanner/bin:$PATH
 
                       sonar-scanner \
@@ -79,9 +81,11 @@ pipeline {
         stage('Install ArgoCD CLI') {
             steps {
                 sh '''
+                  set -e
+
                   if [ ! -f ./argocd ]; then
                     echo "Installing ArgoCD CLI..."
-                    curl -sSL -o argocd \
+                    curl -fsSL -o argocd \
                       https://github.com/argoproj/argo-cd/releases/latest/download/argocd-linux-amd64
                     chmod +x argocd
                   fi
@@ -100,6 +104,8 @@ pipeline {
                     string(credentialsId: 'argocd-token', variable: 'ARGOCD_TOKEN')
                 ]) {
                     sh '''
+                      set -e
+
                       ./argocd app sync hello-helm \
                         --server ${ARGOCD_SERVER} \
                         --auth-token ${ARGOCD_TOKEN} \
