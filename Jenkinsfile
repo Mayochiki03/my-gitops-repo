@@ -26,22 +26,23 @@ pipeline {
         /* =========================
            2. Install Sonar Scanner
            ========================= */
-        stage('Install SonarScanner') {
-            steps {
-                sh '''
-                  if [ ! -d sonar-scanner ]; then
-                    echo "Installing SonarScanner..."
-                    curl -sSLo sonar-scanner.zip \
-                      https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-5.0.1.3006-linux.zip
-                    unzip -q sonar-scanner.zip
-                    mv sonar-scanner-* sonar-scanner
-                  fi
-
-                  export PATH=$PWD/sonar-scanner/bin:$PATH
-                  sonar-scanner --version
-                '''
-            }
+    stage('Install SonarScanner') {
+        steps {
+            sh '''
+              if [ ! -d sonar-scanner ]; then
+                echo "Installing SonarScanner (tar.gz)..."
+                curl -sSL \
+                  https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-5.0.1.3006-linux.tar.gz \
+                  | tar xz
+                mv sonar-scanner-* sonar-scanner
+              fi
+    
+              export PATH=$PWD/sonar-scanner/bin:$PATH
+              sonar-scanner --version
+            '''
         }
+    }
+
 
         /* =========================
            3. SonarQube Analysis
