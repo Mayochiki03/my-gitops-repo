@@ -1,48 +1,50 @@
 pipeline {
-  agent any
+    agent any
 
-  environment {
-    ARGOCD_SERVER = "argocd-server.argocd.svc.cluster.local"
-    ARGOCD_OPTS   = "--insecure --grpc-web"
-  }
-
-  stages {
-
-    stage('Checkout Git') {
-      steps {
-        git(
-          url: 'https://github.com/Mayochiki03/my-gitops-repo.git',
-          branch: 'main'
-        )
-      }
+    environment {
+        ARGOCD_SERVER = "argocd-server.argocd.svc.cluster.local"
+        ARGOCD_OPTS   = "--insecure --grpc-web"
     }
 
-    stage('Install ArgoCD CLI') {
-      steps {
-        sh '''
-          if [ ! -f ./argocd ]; then
-            echo "Installing argocd CLI locally..."
-            curl -sSL -o argocd https://github.com/argoproj/argo-cd/releases/latest/download/argocd-linux-amd64
-            chmod +x argocd
-          fi
-          ./argocd version
-        '''
-      }
-    }
+    stages {
 
-    stage('Sync ArgoCD') {
-      steps {
-        withCredentials([
-          string(credentialsId: 'argocd-token', variable: 'ARGOCD_TOKEN')
-        ]) {
-          sh '''
-            ./argocd app sync hello-helm \
-              --server $ARGOCD_SERVER \
-              $ARGOCD_OPTS \
-              --auth-token $ARGOCD_TOKEN
-          '''
+        stage('Checkout') {
+            steps {
+                git url: 'https://github.com/Mayochiki03/my-gitops-repo.git', branch: 'main'
+            }
         }
-      }
+
+        stage('SonarQube Analysis') {
+            steps {
+                withSonarQubeEnv('sonarqube') {
+                    sh '''
+                      sonar-scanner \
+                        -Dsonar.projectKey=hello-helm \
+                        -Dsonar.projectName=hello-helm \
+                        -Dsonar.sources=.
+                    '''
+                }
+            }
+        }
+
+        stage('Quality Gate') {
+            steps {
+                timeout(time: 5, unit: 'MINUTES') {
+                    waitForQualityGate abortPipeline: true
+                }
+            }
+        }
+
+        stage('Sync ArgoCD') {
+            steps {
+                withCredentials([string(credentialsId: 'argocd-token', variable: 'ARGOCD_TOKEN')]) {
+                    sh '''
+                      ./argocd app sync hello-helm \
+                        --server $ARGOCD_SERVER \
+                        --auth-token $ARGOCD_TOKEN
+                    '''
+                }
+            }
+        }
     }
-  }
 }
