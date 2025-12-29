@@ -6,6 +6,15 @@
 replicaCount: 2
 apiKey: "1234567890SUPER_SECRET_KEY"
 
+database:
+  host: "0.0.0.0"
+  user: "root"
+  password: "root123"
+
+security:
+  allowPrivilegeEscalation: true
+  runAsNonRoot: false
+
 # This sets the container image more information can be found here: https://kubernetes.io/docs/concepts/containers/images/
 image:
   repository: nginx
