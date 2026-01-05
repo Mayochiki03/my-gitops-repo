@@ -10,7 +10,7 @@ database:
   host: "0.0.0.0"
   user: "root"
   password: "root123"
-
+afasfasf
 security:
   allowPrivilegeEscalation: true
   runAsNonRoot: false
